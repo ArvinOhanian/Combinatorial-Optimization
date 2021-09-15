@@ -1,0 +1,88 @@
+import collections
+
+def main():
+    # Opening file
+    file1 = open(r'C:\Users\arvin\Documents\Example.txt', 'r')
+    content = file1.readlines()
+
+    Algorithm_Type = content[0]
+    Grid_Size = To_Int(content[1])
+    Start = To_Int(content[2])
+    
+    End = To_Int(content[3])
+    graph(content)
+    file1.close()
+    
+    
+    
+#def bfs(graph, root):
+        
+
+
+def To_Int(string):#Turns a string into an int list as long as the OG string has a number every other index ex. String = ["1 2 3"]
+    Position = []
+    count = 0
+    for number in string:
+        if(count%2 == 0):
+            Position.append(int(string[count]))
+        count+=1
+    
+    return Position
+
+def Move(Loc1, Loc2):#adds two lists element wise. Lists must be same dimenions and only one row
+    Loc3 = []
+    for i in range(0, len(Loc1)):
+        Loc3.append(Loc1[i] + Loc2[i]) 
+    return Loc3
+
+def To_dir(coded_dir):#takes an encoded direction 1-18 and converts it to a direction vector corresponding to ruleset
+    if(coded_dir == 1):
+        vector = [1, 0, 0]
+    elif(coded_dir == 2):
+        vector = [-1, 0, 0]
+    elif(coded_dir == 3):
+        vector = [0, 1, 0]
+    elif(coded_dir == 4):
+        vector = [0, -1, 0]
+    elif(coded_dir == 5):
+        vector = [0, 0, 1]
+    elif(coded_dir == 6):
+        vector = [0, 0, -1]
+    elif(coded_dir == 7):
+        vector = [1, 1, 0]
+    elif(coded_dir == 8):
+        vector = [1, -1, 0]
+    elif(coded_dir == 9):
+        vector = [-1, 1, 0]
+    elif(coded_dir == 10):
+        vector = [-1, -1, 0]
+    elif(coded_dir == 11):
+        vector = [1, 0, 1]
+    elif(coded_dir == 12):
+        vector = [1, 0, -1]
+    elif(coded_dir == 13):
+        vector = [-1, 0, 1]
+    elif(coded_dir == 14):
+        vector = [-1, 0, -1]
+    elif(coded_dir == 15):
+        vector = [0, 1, 1]
+    elif(coded_dir == 16):
+        vector = [0, 1, -1]
+    elif(coded_dir == 17):
+        vector = [0, -1, 1]
+    elif(coded_dir == 18):
+        vector = [0, -1, -1]
+    else:
+        vector = [99, 99, 99]
+    
+    return vector
+
+def graph(content):#takes readlines of file input.txt and returns a dictionary with all nodes and branches
+    final_dic = []
+    nodes = To_Int(content[4])
+    for node in range(nodes):
+        content.index(node)
+    
+     
+if __name__ == '__main__':
+    main()
