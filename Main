@@ -1,33 +1,268 @@
-import collections
-
+from collections import deque
+import time
+from math import sqrt
 def main():
-    # Opening file
-    file1 = open(r'C:\Users\arvin\Documents\Example.txt', 'r')
+    start_time = time.time()
+    file1 = open(r'input.txt', 'r')
     content = file1.readlines()
-
-    Algorithm_Type = content[0]
-    Grid_Size = To_Int(content[1])
-    Start = To_Int(content[2])
     
-    End = To_Int(content[3])
-    graph(content)
+    Algorithm_Type = content[0]
+    
+    int_content = Textlines_to_int(content[1:])
+    Grid_Size = tuple(int_content[0])
+    Start = tuple(int_content[1])
+    End = tuple(int_content[2])
+    num_nodes = tuple(int_content[3])
+    all_nodes_and_vectors = int_content[4:]
+    
+    output_file = open(r'output.txt', 'w')
+    
+    final_dict = To_Dict(all_nodes_and_vectors)
+    
+    if Algorithm_Type == 'BFS\n':
+        
+        shortest_path = bfs(final_dict, Start, End)
+        
+        path_len = 0
+        Pass = False
+        Pass2 = True
+        for coord in shortest_path:
+            if coord == End:
+                Pass = True
+       
+        for key in final_dict:
+            if key[0]>Grid_Size[0] or key[0] < 0:
+                Pass2=False
+            elif key[1]>Grid_Size[1] or key[1] < 0:
+                Pass2=False
+            elif key[2]>Grid_Size[2] or key[2] < 0:
+                Pass2=False
+                
+        if Pass == True and Pass2==True:
+            for val in shortest_path:
+                path_len+=1
+            output_file.write(str(path_len-1))
+            output_file.write('\n')
+            output_file.write(str(path_len))
+            output_file.write('\n')
+            for node in shortest_path:
+                for val in node:
+                    output_file.write(str(val) + ' ')
+                if node == Start:
+                    output_file.write('0')
+                    output_file.write('\n')
+                else:
+                    output_file.write('1')
+                    output_file.write('\n')
+        elif Pass == False:
+            output_file.write('FAIL')
+        
+    
+    if Algorithm_Type == 'UCS\n':
+        shortest_path, total_cost = UCS(final_dict, Start, End)
+        path_len = 0
+        Pass = False
+        Pass2 = True
+        for coord in shortest_path:
+            if coord[0] == End:
+                Pass = True
+       
+        for key in final_dict:
+            if key[0]>Grid_Size[0] or key[0] < 0:
+                Pass2=False
+            elif key[1]>Grid_Size[1] or key[1] < 0:
+                Pass2=False
+            elif key[2]>Grid_Size[2] or key[2] < 0:
+                Pass2=False
+                
+        if Pass == True and Pass2==True:
+            for val in shortest_path:
+                path_len+=1
+            output_file.write(str(total_cost) + '\n')
+            output_file.write(str(path_len) + '\n')
+            for node in shortest_path:
+                for val in node:
+                    if node.index(val) == 0:
+                        for coor in val:
+                            output_file.write(str(coor) + ' ')
+                    elif node.index(val) == 1:
+                        output_file.write(str(val) + '\n')
+        
+        else:
+            output_file.write('FAIL')
+    
+    if Algorithm_Type == 'A*\n':
+        shortest_path, total_cost = A_Star(final_dict, Start, End)
+        path_len = 0
+        Pass = False
+        Pass2 = True
+        for coord in shortest_path:
+            if coord[0] == End:
+                Pass = True
+       
+        for key in final_dict:
+            if key[0]>Grid_Size[0] or key[0] < 0:
+                Pass2=False
+            elif key[1]>Grid_Size[1] or key[1] < 0:
+                Pass2=False
+            elif key[2]>Grid_Size[2] or key[2] < 0:
+                Pass2=False
+                
+        if Pass == True and Pass2==True:
+            for val in shortest_path:
+                path_len+=1
+            output_file.write(str(total_cost) + '\n')
+            output_file.write(str(path_len) + '\n')
+            for node in shortest_path:
+                for val in node:
+                    if node.index(val) == 0:
+                        for coor in val:
+                            output_file.write(str(coor) + ' ')
+                    elif node.index(val) == 1:
+                        output_file.write(str(val) + '\n')
+        
+        else:
+            output_file.write('FAIL')
+    
+    output_file.close()
     file1.close()
     
+    print("--- %s seconds ---" % (time.time() - start_time))
     
+def bfs(final_dict, start, end):
+    explored = {}
+    queue = deque([[start]])
     
-#def bfs(graph, root):
+    while queue:
+        path = queue.popleft()
+        
+        node = path[-1]
+        if node not in explored:
+            
+            neighbors = deque(final_dict[node])
+            
+            for neighbor in neighbors:
+                
+                new_path = deque(path)
+                
+                new_path.append(neighbor)
+                queue.append(new_path)
+                
+                if neighbor == end:
+                    return new_path
+            explored[node] = 1
+            
+    return new_path
+
+def UCS(final_dict, start, end):
+    total_cost = 0
+    queue = deque([[0, start]])   #queue is a list of lists. Each list is [total cost to get to node, node]
+    visited = {}
+    parents = {start:None}
+    path = deque()
+    while (len(queue)>0):
+        queue = sorted(queue)
+        point = queue[-1]
+        del queue[-1]
+        point[0] *= -1
+        
+        current_node = point[1]
+        
+        
+        if (current_node == end):
+            
+            prev_node = current_node
+            
+            while prev_node != start:
+                parent = parents[prev_node]
+                coord_cost = cost(prev_node, parent)
+                path.appendleft([prev_node, coord_cost])
+                total_cost += coord_cost
+                prev_node = parent
+            path.appendleft([parent, 0])
+            
+            return path, total_cost
+        
+        if(point[1] not in visited):
+            for i in range(len(final_dict[point[1]])):
+                
+                queue.append( [ (point[0] + cost(point[1], final_dict[point[1]][i]))*-1, final_dict[point[1]][i]])
+                if(final_dict[point[1]][i] not in visited.keys()):
+                    parents[final_dict[point[1]][i]] = point[1]      
+            
+        visited[point[1]] = 1
+    
+    return path, total_cost
+
+
         
 
-
-def To_Int(string):#Turns a string into an int list as long as the OG string has a number every other index ex. String = ["1 2 3"]
-    Position = []
-    count = 0
-    for number in string:
-        if(count%2 == 0):
-            Position.append(int(string[count]))
-        count+=1
+def A_Star(final_dict, start, end):
+    total_cost = 0
+    queue = deque([[0, start]]) 
+    visited = {}
+    parents = {start:None}
+    path = deque()
+    while (len(queue)>0):
+        queue = sorted(queue)
+        point = queue[-1]
+        del queue[-1]
+        point[0] *= -1
+        
+        current_node = point[1]
+        
+        
+        if (current_node == end):
+            
+            prev_node = current_node
+            
+            while prev_node != start:
+                parent = parents[prev_node]
+                coord_cost = cost(prev_node, parent)
+                path.appendleft([prev_node, coord_cost])
+                total_cost += coord_cost
+                prev_node = parent
+            path.appendleft([parent, 0])
+            
+            return path, total_cost
+        
+        if(point[1] not in visited):
+            for i in range(len(final_dict[point[1]])):
+                
+                queue.append( [ (Euclid(point[1], end) + point[0] + cost(point[1], final_dict[point[1]][i]))*-1, final_dict[point[1]][i]])
+                if(final_dict[point[1]][i] not in visited.keys()):
+                    parents[final_dict[point[1]][i]] = point[1] 
+            
+        visited[point[1]] = 1
     
-    return Position
+    return path, total_cost
+
+def Euclid(start_node, dest_node):
+    x1 = start_node[0]
+    x2 = dest_node[0]
+    y1 = start_node[1]
+    y2 = dest_node[1]
+    z1 = start_node[2]
+    z2 = dest_node[2]
+    
+    total_dist = sqrt(((x2 - x1)**2) + ((y2 - y1)**2) + ((z2 - z1)**2) )
+    total_dist = round(total_dist,0)
+    return total_dist
+
+def cost(start_node, dest_node):
+    coors_changed = 0
+    for i in range(len(start_node)):
+        if start_node[i] != dest_node[i]:
+            coors_changed+=1
+    #print('changed ',coors_changed)
+            
+    if coors_changed == 2:
+        cost = 14
+        return cost
+        
+    elif coors_changed == 1:
+        cost = 10
+        return cost
 
 def Move(Loc1, Loc2):#adds two lists element wise. Lists must be same dimenions and only one row
     Loc3 = []
@@ -77,12 +312,64 @@ def To_dir(coded_dir):#takes an encoded direction 1-18 and converts it to a dire
     
     return vector
 
-def graph(content):#takes readlines of file input.txt and returns a dictionary with all nodes and branches
-    final_dic = []
-    nodes = To_Int(content[4])
-    for node in range(nodes):
-        content.index(node)
+def Textlines_to_int(nodes):#takes a list of strings from input.txt and converts each line to int. returns int list of lists
+    int_pos = []
+    int_pos_val = []
+    idx = 0
+    num_size = 0
+    big_num = ''
     
+    for val in nodes:
+        
+        for char in val:
+            if char.isdigit():
+                num_size+=1
+            try:
+                if char.isdigit() and val[idx+1].isdigit()==False:
+                    for chars in range(num_size):
+                        big_num =  big_num + val[idx-num_size+1]
+                        num_size-=1
+                    
+                    int_pos_val.append(int(big_num))
+                    big_num = ''
+            
+            except IndexError:
+                for chars in range(num_size):
+                        big_num =  big_num + val[idx-num_size+1]
+                        num_size-=1
+                    
+                int_pos_val.append(int(big_num))
+                big_num = ''
+                
+            idx+=1
+        int_pos.append(int_pos_val)
+        int_pos_val = []
+        idx = 0
+    return int_pos
+
+def To_Dict(def_list):#takes an int list of lists and returns a dictionary with tuple keys reping points and values reping connected points
+    temp_list = []
+    final_dict = {}
+    directions = []
+    idx_count = 0
+    for list in def_list:
+        for val in list:
+            if list.index(val) < 3 and idx_count < 3:
+                temp_list.append(val)
+                idx_count+=1
+            
+            elif idx_count > 2:
+                directions.append(tuple(Move(To_dir(val), temp_list)))
+                
+        temp_tup = tuple(temp_list)
+        final_dict[temp_tup] = directions
+        temp_list = []
+        directions = []
+        idx_count = 0
+    return final_dict
+
+
+
      
 if __name__ == '__main__':
     main()
